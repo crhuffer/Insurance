@@ -25,6 +25,18 @@ df_InsuranceProcessed_train = pd.read_csv(filename_InsuranceProcessed_train)
 df_InsuranceProcessed_val = pd.read_csv(filename_InsuranceProcessed_val)
 df_InsuranceProcessed_test = pd.read_csv(filename_InsuranceProcessed_test)
 
+# %% Charges: plot
+
+fig, ax = plt.subplots()
+df_InsuranceProcessed_train['charges'].plot(marker='.', linestyle='none')
+
+# %% Charges: Histogram
+
+fig, ax = plt.subplots()
+df_InsuranceProcessed_train['charges'].hist(bins=100)
+ax.set_ylabel('Counts')
+ax.set_xlabel('Charges')
+
 # %% Insurance: Exploring age vs sex: boxplot
 
 fig, ax = plt.subplots()
@@ -55,7 +67,7 @@ ax.set_ylabel('Counts')
 ax.set_xlabel('Age [yrs]')
 plt.legend()
 
-# %% Insurance: Exploring age s sex: describes
+# %% Insurance: Exploring age vs sex: describes
 
 print('All rows: \n{}'.format(df_InsuranceProcessed_train['age'].describe()))
 indexer = df_InsuranceProcessed_train['sex'] == 'male'
@@ -63,12 +75,23 @@ print('\nMales: \n{}'.format(df_InsuranceProcessed_train.loc[indexer, 'age'].des
 indexer = df_InsuranceProcessed_train['sex'] == 'female'
 print('\nFemales: \n{}'.format(df_InsuranceProcessed_train.loc[indexer, 'age'].describe()))
 
-# %% Insurance: Exploring age s sex: Boxplot of target
+# %% Insurance: Exploring age vs sex: Boxplot of target
 
 fig, ax = plt.subplots()
 sns.boxplot(y='charges', x='age', hue='sex', data=df_InsuranceProcessed_train)
 
-# %% Insurance: Exploring age s sex: Boxplot of target
+# %% Insurance: Exploring age vs sex: Boxplot of target
+
+fig, ax = plt.subplots()
+indexer = df_InsuranceProcessed_train['sex'] == 'male'
+plt.scatter(y='charges', x='age', data=df_InsuranceProcessed_train.loc[indexer], marker='.', color='b', label='male')
+indexer = df_InsuranceProcessed_train['sex'] == 'female'
+plt.scatter(y='charges', x='age', data=df_InsuranceProcessed_train.loc[indexer], marker='.', color='r', label='female')
+plt.legend()
+ax.set_ylabel('charges (USD)')
+ax.set_xlabel('age (yrs)')
+
+# %% Insurance: Exploring age vs sex: Boxplot of target
 
 fig, ax = plt.subplots()
 sns.boxplot(y='charges', x='sex', hue='age', data=df_InsuranceProcessed_train)
@@ -77,3 +100,7 @@ sns.boxplot(y='charges', x='sex', hue='age', data=df_InsuranceProcessed_train)
 
 df_InsuranceProcessed_train['region'].value_counts()
 
+# %% 
+
+#fig, ax = plt.subplots()
+#df_InsuranceProcessed_train['']
