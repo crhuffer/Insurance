@@ -50,7 +50,7 @@ X_val = df_InsuranceProcessed_val.loc[:, X_columns]
 y_test = df_InsuranceProcessed_test.loc[:, y_columns]
 X_test = df_InsuranceProcessed_test.loc[:, X_columns]
 
-# %%
+# %% Function definitions
 
 def plot(x, y, z, data, colormap, x_panel, xlim=None, ylim=None, x_panel_alias=None):
     iffirstpassmakelegend=True
@@ -80,7 +80,12 @@ def plot(x, y, z, data, colormap, x_panel, xlim=None, ylim=None, x_panel_alias=N
     ax[0].set_ylim(ylim)
     ax[0].set_xlim(xlim)
 
-# %% ParamSet1
+# %% Setup df_AllResults
+
+df_AllResults = pd.DataFrame(columns=['Val_RMSE', 'Train_RMSE', 'paramset'])
+#df_AllResults.set_index('paramset')
+
+# %% ParamSet1: Initial parameter space
 
 paramset = 1
 params = {'n_estimators': [10, 20, 30, 40, 50, 60, 70, 80 , 90, 100, 110, 120, 130, 140, 150, 200, 250],
@@ -89,7 +94,7 @@ params = {'n_estimators': [10, 20, 30, 40, 50, 60, 70, 80 , 90, 100, 110, 120, 1
 #          'gamma': [0, 1, 10, 100]}
           'min_child_weight': [1, 10, 25, 50]}
 
-# %% ParamSet2.0
+# %% ParamSet2.0: Exploring n_estimators and max_depth
 paramset = 2.0
 params = {'n_estimators': [10, 20, 24, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 60, 70, 80 , 90, 100, 110, 120, 130, 140, 150, 200, 250],
           'max_depth': [2, 3, 4, 5, 6]
@@ -124,7 +129,7 @@ params = {'n_estimators': [10, 20, 30, 40, 50, 60, 70, 80 , 90, 100, 110, 120, 1
 now = pd.datetime.now()
 print('Start model buildling now: {}'.format(now))
 model = xgb.XGBRegressor()
-grid = GridSearchCV(model, params, cv=5, scoring='neg_mean_squared_error', n_jobs=8, return_train_score=True)
+grid = GridSearchCV(model, params, cv=5, scoring='neg_mean_squared_error', n_jobs=4, return_train_score=True)
 grid.fit(X_train, y_train)
 
 print('Ending model buildling now: {}'.format(pd.datetime.now()))
@@ -143,39 +148,85 @@ list_columns = [col for col in df_grid if col.startswith('param_')]
 for col in list_columns:
     df_grid[col] = pd.to_numeric(df_grid[col])
 
-# %%
+# %% Append results to df_AllResults
 
-sns.boxplot(x='param_n_estimators', y='mean_test_score', data=df_grid, hue='param_max_depth')
+df_AllResults = df_AllResults.append({'paramset': paramset,
+                                      'Val_RMSE': np.sqrt(mean_squared_error(y_val,
+                                                                                    y_predict_val)),
+                                      'Train_RMSE': np.sqrt(mean_squared_error(y_train,
+                                                                                     y_predict_train))},
+                                                                                     ignore_index=True)
 
-# %%
+# %% ParamSet2.0 Plots: n_estimators and max_depth
 
-sns.boxplot(x='param_max_depth', y='mean_test_score', data=df_grid, hue='param_n_estimators')
+fig, ax = plt.subplots(sharex=True, sharey=True)
+#plt.sca(ax)
+
+colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
+
+
+#for learning_rate in params['learning_rate'].unique():
+
+
+max_depth = 2; color = colormap[max_depth]
+indexer = ((df_grid['param_max_depth'] == max_depth))
+plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
+
+max_depth = 3; color = colormap[max_depth]
+indexer = ((df_grid['param_max_depth'] == max_depth))
+plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
+
+max_depth = 4; color = colormap[max_depth]
+indexer = ((df_grid['param_max_depth'] == max_depth))
+plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
+
+max_depth = 5; color = colormap[max_depth]
+indexer = ((df_grid['param_max_depth'] == max_depth))
+plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
+
+max_depth = 6; color = colormap[max_depth]
+indexer = ((df_grid['param_max_depth'] == max_depth))
+plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
+ax.set_ylim(-2.6e7, -2.1e7)
+ax.set_xlabel('n_estimators')
+ax.set_ylabel('neg_mean_squared_error')
+plt.legend()
+plt.grid()
+plt.show()
 
 # %% ParamSet3.0 Plots: Larger scale
+
 colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
-plot('param_n_estimators', 'mean_test_score', 'param_max_depth', df_grid, colormap, 'param_learning_rate', ylim=(-3e7, -2e7))
+plot('param_n_estimators', 'mean_test_score', 'param_max_depth', df_grid, colormap, 'param_learning_rate', ylim=(-3e7, -2e7), x_panel_alias='lr')
 
 # %% ParamSet3.0 Plots: Smaller scale
+
 colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
-plot('param_n_estimators', 'mean_test_score', 'param_max_depth', df_grid, colormap, 'param_learning_rate', ylim=(-2.4e7, -2.1e7))
+plot('param_n_estimators', 'mean_test_score', 'param_max_depth', df_grid, colormap, 'param_learning_rate', ylim=(-2.4e7, -2.1e7), x_panel_alias='lr')
 
 # %% ParamSet3.1 Plots: Larger scale
+
 colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
 plot('param_n_estimators', 'mean_test_score', 'param_max_depth', df_grid, colormap, 'param_learning_rate', ylim=(-3e7, -2e7), x_panel_alias='lr')
 
 # %% ParamSet3.1 Plots: Smaller scale
+
 colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
 plot('param_n_estimators', 'mean_test_score', 'param_max_depth', df_grid, colormap, 'param_learning_rate', ylim=(-2.25e7, -2.1e7), x_panel_alias='lr')
 
 # %% ParamSet4.0 Plots: 
+
 colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
 plot('param_n_estimators', 'mean_test_score', 'param_max_depth', df_grid, colormap, 'param_gamma', ylim=(-3e7, -2e7), x_panel_alias='gamma')
 
 # %% ParamSet4.1 Plots: 
+
 colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
 plot('param_n_estimators', 'mean_test_score', 'param_max_depth', df_grid, colormap, 'param_gamma', ylim=(-3e7, -2e7), x_panel_alias='gamma')
 
 # %% Running the model
+
+paramset=0
 
 model = xgb.XGBRegressor()
 model.fit(X_train, y_train)
@@ -190,8 +241,8 @@ y_predict_train = pd.Series(grid.best_estimator_.predict(X_train))
 
 # %% Calculating the loss metrics
 
-Val_RMSE = mean_squared_error(y_val, y_predict_val)
-Train_RMSE = mean_squared_error(y_train, y_predict_train)
+Val_RMSE = np.sqrt(mean_squared_error(y_val, y_predict_val))
+Train_RMSE = np.sqrt(mean_squared_error(y_train, y_predict_train))
 print('Val_RMSE: {}'.format(Val_RMSE))
 print('Train_RMSE: {}'.format(Train_RMSE))
 
@@ -200,6 +251,13 @@ print('Train_RMSE: {}'.format(Train_RMSE))
 df_InsuranceProcessed_val['Model{}Pred'.format(paramset)] = y_predict_val
 df_InsuranceProcessed_val['Model{}Res'.format(paramset)] = y_predict_val - y_val
 df_InsuranceProcessed_val['Model{}FracErr'.format(paramset)] = (y_predict_val - y_val)/y_val
+
+# %% Error Analysis: Plotting actual vs predicted
+
+fig, ax = plt.subplots()
+df_InsuranceProcessed_val.loc[:, ['charges', 'Model{}Pred'.format(paramset)]].plot.scatter(x='charges', y='Model{}Pred'.format(paramset), marker = '.', ax=ax)
+ax.set_ylabel('charge_prediction')
+ax.set_xlabel('charge')
 
 # %% Error Analysis: Plotting actual and predicted
 
@@ -236,3 +294,11 @@ fig, ax = plt.subplots()
 df_InsuranceProcessed_val['Model{}FracErr'.format(paramset)].hist(ax=ax, bins=bins)
 ax.set_ylabel('Counts')
 ax.set_xlabel('Fractional Error')
+
+# %%
+
+sns.boxplot(x='param_n_estimators', y='mean_test_score', data=df_grid, hue='param_max_depth')
+
+# %%
+
+sns.boxplot(x='param_max_depth', y='mean_test_score', data=df_grid, hue='param_n_estimators')
