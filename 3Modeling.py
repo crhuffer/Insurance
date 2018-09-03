@@ -36,7 +36,6 @@ df_InsuranceProcessed_train = pd.read_csv(filename_InsuranceProcessed_train)
 df_InsuranceProcessed_val = pd.read_csv(filename_InsuranceProcessed_val)
 df_InsuranceProcessed_test = pd.read_csv(filename_InsuranceProcessed_test)
 
-
 # %% selecting columns for modeling.
 
 X_columns = ['age', 'bmi', 'children', 'IsSmoker', 'IsMale', 'northwest', 'southeast', 'southwest']
@@ -50,8 +49,6 @@ y_val = df_InsuranceProcessed_val.loc[:, y_columns]
 X_val = df_InsuranceProcessed_val.loc[:, X_columns]
 y_test = df_InsuranceProcessed_test.loc[:, y_columns]
 X_test = df_InsuranceProcessed_test.loc[:, X_columns]
-
-# %%
 
 # %%
 
@@ -122,7 +119,6 @@ params = {'n_estimators': [10, 20, 30, 40, 50, 60, 70, 80 , 90, 100, 110, 120, 1
           'max_depth': [2, 3, 4, 5, 6],
           'gamma': [3e5, 6e5, 1e6, 3e6, 6e6, 1e7, 3e7, 6e7]}
 
-
 # %% -------- run XGB grid---------------------
 
 now = pd.datetime.now()
@@ -136,7 +132,6 @@ print('Modeling duration: {}'.format(pd.datetime.now()-now))
 
 y_predict_val = pd.Series(grid.best_estimator_.predict(X_val))
 y_predict_train = pd.Series(grid.best_estimator_.predict(X_train))
-
 
 # %% Convert the grid to a dataframe so we can explore it
 
@@ -155,82 +150,6 @@ sns.boxplot(x='param_n_estimators', y='mean_test_score', data=df_grid, hue='para
 # %%
 
 sns.boxplot(x='param_max_depth', y='mean_test_score', data=df_grid, hue='param_n_estimators')
-
-# %%
-
-fig, ax = plt.subplots()
-plt.sca(ax)
-
-colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
-
-#for learning_rate in params['learning_rate'].unique():
-
-learning_rate = 0.3
-
-max_depth = 2; color = colormap[max_depth]
-indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label=max_depth, marker='.')
-
-max_depth = 3; color = colormap[max_depth]
-indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label=max_depth, marker='.')
-
-max_depth = 4; color = colormap[max_depth]
-indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label=max_depth, marker='.')
-
-max_depth = 5; color = colormap[max_depth]
-indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label=max_depth, marker='.')
-
-max_depth = 6; color = colormap[max_depth]
-indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label=max_depth, marker='.')
-
-ax.set_ylim(-3e7, -2e7)
-plt.legend()
-ax.set_xlabel('n_estimators')
-ax.set_ylabel('neg_mean_squared_error')
-plt.show()
-
-# %%
-
-fig, ax = plt.subplots()
-plt.sca(ax)
-
-colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
-
-#for learning_rate in params['learning_rate'].unique():
-
-learning_rate = 0.3
-for learning_rate in pd.Series(params['learning_rate']).unique():
-    max_depth = 2; color = colormap[max_depth]
-    indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-    plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label=max_depth, marker='.')
-    
-    max_depth = 3; color = colormap[max_depth]
-    indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-    plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label=max_depth, marker='.')
-    
-    max_depth = 4; color = colormap[max_depth]
-    indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-    plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label=max_depth, marker='.')
-    
-    max_depth = 5; color = colormap[max_depth]
-    indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-    plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label=max_depth, marker='.')
-    
-    max_depth = 6; color = colormap[max_depth]
-    indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-    plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label=max_depth, marker='.')
-
-ax.set_ylim(-3e7, -2e7)
-plt.legend()
-ax.set_xlabel('n_estimators')
-ax.set_ylabel('neg_mean_squared_error')
-plt.show()
-
-
 
 # %% ParamSet3.0 Plots: Larger scale
 colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
@@ -256,182 +175,13 @@ plot('param_n_estimators', 'mean_test_score', 'param_max_depth', df_grid, colorm
 colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
 plot('param_n_estimators', 'mean_test_score', 'param_max_depth', df_grid, colormap, 'param_gamma', ylim=(-3e7, -2e7), x_panel_alias='gamma')
 
-# %%
-
-list_learning_rates = pd.Series(params['learning_rate']).unique()
-fig, ax = plt.subplots(1,len(list_learning_rates) ,sharex=True, sharey=True)
-#plt.sca(ax)
-
-colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
-
-
-#for learning_rate in params['learning_rate'].unique():
-
-learning_rate = 0.3
-#for indexgamma, gamma in enumerate(list_gamma):
-for indexlr, learning_rate in enumerate(list_learning_rates):
-    plt.sca(ax[indexlr])
-    plt.title('lr = {}'.format(learning_rate))
-    max_depth = 2; color = colormap[max_depth]
-    indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-    plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-    
-    max_depth = 3; color = colormap[max_depth]
-    indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-    plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-    
-    max_depth = 4; color = colormap[max_depth]
-    indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-    plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-    
-    max_depth = 5; color = colormap[max_depth]
-    indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-    plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-    
-    max_depth = 6; color = colormap[max_depth]
-    indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate))
-    plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-    ax[indexlr].set_ylim(-3e7, -2.1e7)
-    ax[indexlr].set_xlabel('n_estimators')
-    ax[indexlr].set_ylabel('neg_mean_squared_error')
-plt.legend()
-
-plt.show()
-
-# %%
-
-list_learning_rates = pd.Series(params['learning_rate']).unique()
-list_gamma = pd.Series(params['gamma']).unique()
-fig, ax = plt.subplots(len(list_gamma),len(list_learning_rates) ,sharex=True, sharey=True)
-
-colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
-
-#for learning_rate in params['learning_rate'].unique():
-
-for indexgamma, gamma in enumerate(list_gamma):
-    for indexlr, learning_rate in enumerate(list_learning_rates):
-        plt.sca(ax[indexgamma, indexlr])
-        plt.title('lr = {}'.format(learning_rate))
-        max_depth = 2; color = colormap[max_depth]
-        indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate) &
-                   (df_grid['param_gamma'] == gamma))
-        plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-        
-        max_depth = 3; color = colormap[max_depth]
-        indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate) &
-                   (df_grid['param_gamma'] == gamma))
-        plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-        
-        max_depth = 4; color = colormap[max_depth]
-        indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate) &
-                   (df_grid['param_gamma'] == gamma))
-        plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-        
-        max_depth = 5; color = colormap[max_depth]
-        indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate) &
-                   (df_grid['param_gamma'] == gamma))
-        plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-        
-        max_depth = 6; color = colormap[max_depth]
-        indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate) &
-                   (df_grid['param_gamma'] == gamma))
-        plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-        ax[3, indexlr].set_ylim(-3e7, -2.1e7)
-        ax[3, indexlr].set_xlabel('n_estimators')
-        ax[1, 0].set_ylabel('neg_mean_squared_error')
-
-plt.legend()
-plt.show()
-
-# %%
-
-list_learning_rates = pd.Series(params['learning_rate']).unique()
-list_min_child_weight = pd.Series(params['min_child_weight']).unique()
-fig, ax = plt.subplots(len(list_min_child_weight),len(list_learning_rates) ,sharex=True, sharey=True)
-
-colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
-
-#for learning_rate in params['learning_rate'].unique():
-
-for indexmin_child_weight, min_child_weight in enumerate(list_min_child_weight):
-    for indexlr, learning_rate in enumerate(list_learning_rates):
-        plt.sca(ax[indexmin_child_weight, indexlr])
-        plt.title('lr = {}'.format(learning_rate))
-        max_depth = 2; color = colormap[max_depth]
-        indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate) &
-                   (df_grid['param_min_child_weight'] == min_child_weight))
-        plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-        
-        max_depth = 3; color = colormap[max_depth]
-        indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate) &
-                   (df_grid['param_min_child_weight'] == min_child_weight))
-        plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-        
-        max_depth = 4; color = colormap[max_depth]
-        indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate) &
-                   (df_grid['param_min_child_weight'] == min_child_weight))
-        plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-        
-        max_depth = 5; color = colormap[max_depth]
-        indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate) &
-                   (df_grid['param_min_child_weight'] == min_child_weight))
-        plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-        
-        max_depth = 6; color = colormap[max_depth]
-        indexer = ((df_grid['param_max_depth'] == max_depth) & (df_grid['param_learning_rate'] == learning_rate) &
-                   (df_grid['param_min_child_weight'] == min_child_weight))
-        plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-        ax[3, indexlr].set_ylim(-3e7, -2.1e7)
-        ax[3, indexlr].set_xlabel('n_estimators')
-        ax[1, 0].set_ylabel('neg_mean_squared_error')
-
-plt.legend()
-plt.show()
-
-# %%
-fig, ax = plt.subplots()
-plt.sca(ax)
-
-colormap = {2: 'r', 3: 'y', 4: 'g', 5: 'b', 6: 'c'}
-
-#for n_estimators in params['n_estimators'].unique():
-
-n_estimators = 50
-
-max_depth = 2; color = colormap[max_depth]
-indexer = ((df_grid['param_max_depth'] == max_depth) )
-plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-
-max_depth = 3; color = colormap[max_depth]
-indexer = ((df_grid['param_max_depth'] == max_depth) )
-plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-
-max_depth = 4; color = colormap[max_depth]
-indexer = ((df_grid['param_max_depth'] == max_depth) )
-plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-
-max_depth = 5; color = colormap[max_depth]
-indexer = ((df_grid['param_max_depth'] == max_depth) )
-plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-
-max_depth = 6; color = colormap[max_depth]
-indexer = ((df_grid['param_max_depth'] == max_depth) )
-plt.plot('param_n_estimators', 'mean_test_score', data=df_grid.loc[indexer, :], color=color, label='max_depth={}'.format(max_depth), marker='.')
-
-ax.set_ylim(-3e7, -2e7)
-plt.legend()
-ax.set_xlabel('n_estimators')
-ax.set_ylabel('neg_mean_squared_error')
-plt.grid()
-plt.show()
-
-
 # %% Running the model
-
 
 model = xgb.XGBRegressor()
 model.fit(X_train, y_train)
 
+y_predict_val = pd.Series(model.predict(X_val))
+y_predict_train = pd.Series(model.predict(X_train))
 
 # %% Define predicitons for train and validation
 
@@ -444,7 +194,6 @@ Val_RMSE = mean_squared_error(y_val, y_predict_val)
 Train_RMSE = mean_squared_error(y_train, y_predict_train)
 print('Val_RMSE: {}'.format(Val_RMSE))
 print('Train_RMSE: {}'.format(Train_RMSE))
-
 
 # %% Storing the prediction and residuals
 
@@ -465,7 +214,6 @@ fig, ax = plt.subplots()
 df_InsuranceProcessed_val.plot(y='Model{}Res'.format(paramset), ax=ax)
 ax.set_ylabel('Residual')
 ax.set_xlabel('index')
-
 
 # %% Error Analysis: Hist of residual
 bins = np.linspace(-25000, 7500, 100)
