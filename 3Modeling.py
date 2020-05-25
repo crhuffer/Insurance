@@ -8,6 +8,7 @@ Created on Sat Aug 25 12:25:20 2018
 #%% Libraries
 
 import pandas as pd
+import datetime
 import seaborn as sns
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -131,14 +132,14 @@ params = {'n_estimators': [10, 20, 30, 40, 50, 60, 70, 80 , 90, 100, 110, 120, 1
 
 #%% -------- run XGB grid---------------------
 
-now = pd.datetime.now()
+now = datetime.datetime.now()
 print('Start model buildling now: {}'.format(now))
 model = xgb.XGBRegressor()
-grid = GridSearchCV(model, params, cv=5, scoring='neg_mean_squared_error', n_jobs=4, return_train_score=True)
+grid = GridSearchCV(model, params, cv=5, scoring='neg_mean_squared_error', n_jobs=2, return_train_score=True)
 grid.fit(X_train, y_train)
 
-print('Ending model buildling now: {}'.format(pd.datetime.now()))
-print('Modeling duration: {}'.format(pd.datetime.now()-now))
+print('Ending model buildling now: {}'.format(datetime.datetime.now()))
+print('Modeling duration: {}'.format(datetime.datetime.now()-now))
 
 y_predict_val = pd.Series(grid.best_estimator_.predict(X_val))
 y_predict_train = pd.Series(grid.best_estimator_.predict(X_train))
