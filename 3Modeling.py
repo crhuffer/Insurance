@@ -48,8 +48,8 @@ y_train = df_InsuranceProcessed_train.loc[:, y_columns]
 X_train = df_InsuranceProcessed_train.loc[:, X_columns]
 y_val = df_InsuranceProcessed_val.loc[:, y_columns]
 X_val = df_InsuranceProcessed_val.loc[:, X_columns]
-y_test = df_InsuranceProcessed_test.loc[:, y_columns]
 X_test = df_InsuranceProcessed_test.loc[:, X_columns]
+y_test = df_InsuranceProcessed_test.loc[:, y_columns]
 
 #%% Function definitions
 
