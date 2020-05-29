@@ -5,6 +5,8 @@ Created on Sat Aug 25 12:25:20 2018
 @author: crhuffer
 """
 
+
+
 #%% Libraries
 
 import pandas as pd
@@ -19,6 +21,8 @@ from tensorflow import keras
 import tensorflow_docs as tfdocs
 import tensorflow_docs.plots
 import tensorflow_docs.modeling
+
+from tensorboard.plugins.hparams import api as hp
 
 
 from sklearn.metrics import mean_squared_error
@@ -92,7 +96,7 @@ LEARNING_RATE = 0.001
 # # Train the estimator
 # EPOCHS = 1000
 #
-# history = model.fit(X_train, y_train, epochs=EPOCHS, validation_split = 0.2, verbose=1,
+# history = model.fit(X_train, y_train, epochs=EPOCHS, validation_split = 0.2, verbose=0,
 #           callbacks=[tfdocs.modeling.EpochDots()],
 #           validation_data=(X_val, y_val))
 
@@ -112,7 +116,7 @@ tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram
 
 history = model.fit(
   np.array(X_train), np.array(y_train),
-  epochs=EPOCHS, validation_data=(X_val, y_val), verbose=1,
+  epochs=EPOCHS, validation_data=(X_val, y_val), verbose=0,
   callbacks=[tfdocs.modeling.EpochDots(), tensorboard_callback])
 
 #%%
@@ -129,7 +133,7 @@ tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram
 
 history = model.fit(
   np.array(X_train), np.array(y_train),
-  epochs=EPOCHS, validation_data=(X_val, y_val), verbose=1,
+  epochs=EPOCHS, validation_data=(X_val, y_val), verbose=0,
   callbacks=[tfdocs.modeling.EpochDots(), tensorboard_callback])
 
 #%%
@@ -146,7 +150,7 @@ tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram
 
 history = model.fit(
   np.array(X_train), np.array(y_train),
-  epochs=EPOCHS, validation_data=(X_val, y_val), verbose=1,
+  epochs=EPOCHS, validation_data=(X_val, y_val), verbose=0,
   callbacks=[tfdocs.modeling.EpochDots(), tensorboard_callback])
 
 #%%
@@ -163,7 +167,7 @@ tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram
 
 history = model.fit(
   np.array(X_train), np.array(y_train),
-  epochs=EPOCHS, validation_data=(X_val, y_val), verbose=1,
+  epochs=EPOCHS, validation_data=(X_val, y_val), verbose=0,
   callbacks=[tfdocs.modeling.EpochDots(), tensorboard_callback])
 
 #%%
@@ -184,7 +188,7 @@ for NODES_LAYER1 in [4, 8, 16, 32, 64]:
 
         history = model.fit(
           np.array(X_train), np.array(y_train),
-          epochs=EPOCHS, validation_data=(X_val, y_val), verbose=1,
+          epochs=EPOCHS, validation_data=(X_val, y_val), verbose=0,
           callbacks=[tfdocs.modeling.EpochDots(), tensorboard_callback])
 
 
@@ -215,6 +219,91 @@ params = {'nodes_layer1': [2, 4, 8, 16, 32, 64],
 #%%
 
 history.history.keys()
+
+#%%
+
+HP_NUM_UNITS_LAYER1 = hp.HParam('num_units_layer1', hp.Discrete([2, 4, 8]))
+HP_NUM_UNITS_LAYER2 = hp.HParam('num_units_layer2', hp.Discrete([2, 4, 8, 16, 32, 64]))
+HP_DROPOUT = hp.HParam('dropout', hp.Discrete([0.1, 0.15, 0.2, 0.3]))
+# HP_OPTIMIZER = hp.HParam('optimizer', hp.Discrete(['adam', 'sgd']))
+HP_LEARNING_RATE = hp.HParam('learning_rate', hp.Discrete([0.01, 0.001]))
+HP_EPOCHS = hp.HParam('epochs', hp.Discrete([2000]))
+
+log_dir = "logs/hparam_tuningv11withdropout/"
+
+# tensorboard --logdir logs/hparam_tuningv3
+#%%
+
+METRIC_MSE = 'mse'
+
+with tf.summary.create_file_writer(log_dir).as_default():
+  hp.hparams_config(
+    hparams=[HP_NUM_UNITS_LAYER1, HP_NUM_UNITS_LAYER2, HP_LEARNING_RATE, HP_EPOCHS, HP_DROPOUT],
+    metrics=[hp.Metric(METRIC_MSE, display_name='mse')]
+  )
+
+#%%
+
+def train_model(hparams, logdir):
+  model = keras.Sequential([
+    keras.layers.Dense(hparams[HP_NUM_UNITS_LAYER1], activation='relu', input_shape=[len(X_train.columns)]),
+    keras.layers.Dropout(hparams[HP_DROPOUT]),
+    keras.layers.Dense(hparams[HP_NUM_UNITS_LAYER2], activation='relu'),
+    keras.layers.Dense(1)
+  ])
+
+  optimizer = tf.keras.optimizers.RMSprop(learning_rate=hparams[HP_LEARNING_RATE])
+
+  model.compile(loss='mse',
+                optimizer=optimizer,
+                metrics=['mse', 'mae'])
+
+  tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+
+  history = model.fit(
+                      np.array(X_train), np.array(y_train),
+                      epochs=hparams[HP_EPOCHS], validation_data=(X_val, y_val), verbose=0,
+                      callbacks=[tf.keras.callbacks.TensorBoard(logdir)])#,  # log metrics
+                                 # hp.KerasCallback(logdir, hparams)])
+  # model.fit(X_train, y_train, epochs=hparams[HP_EPOCHS], verbose=0)  # Run with 1 epoch to speed things up for demo purposes
+  _, mse, _ = model.evaluate(X_val, y_val)
+  return mse
+
+#%%
+
+
+def run(run_dir, hparams):
+  with tf.summary.create_file_writer(run_dir).as_default():
+    hp.hparams(hparams)  # record the values used in this trial
+    mse = train_model(hparams, run_dir)
+    try:
+        tf.summary.scalar(METRIC_MSE, mse, step=1)
+    except:
+        tf.summary.scalar(METRIC_MSE, mse, step=1)
+
+#%%
+
+session_num = 0
+
+for learning_rate in HP_LEARNING_RATE.domain.values:
+    for dropoutrate in HP_DROPOUT.domain.values:
+        for num_units_layer1 in HP_NUM_UNITS_LAYER1.domain.values:
+            for num_units_layer2 in HP_NUM_UNITS_LAYER2.domain.values:
+              for epochs in HP_EPOCHS.domain.values:
+
+
+                  hparams = {
+                      HP_NUM_UNITS_LAYER1: num_units_layer1,
+                      HP_NUM_UNITS_LAYER2: num_units_layer2,
+                      HP_LEARNING_RATE: learning_rate,
+                      HP_EPOCHS: epochs,
+                      HP_DROPOUT: dropoutrate
+                  }
+                  run_name = "run-%d" % session_num
+                  print('--- Starting trial: %s' % run_name)
+                  print({h.name: hparams[h] for h in hparams})
+                  run(log_dir + run_name, hparams)
+                  session_num += 1
 
 #%%
 
