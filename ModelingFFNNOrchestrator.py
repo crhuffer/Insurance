@@ -2,7 +2,7 @@
 
 from GPyOpt.methods import BayesianOptimization
 
-import ModelingFFNNmlflow_example
+import ModelingFFNN
 
 #%%
 
@@ -23,13 +23,13 @@ def run(args):
     nodes, drop_rate, learning_rate = args[0]
     print( nodes, drop_rate, learning_rate)
     # nodes=4
-    # subprocess.call(" python ModelingFFNNmlflow_example.py --nodes {}".format(nodes), shell=True)
+    # subprocess.call(" python ModelingFFNN.py --nodes {}".format(nodes), shell=True)
     #
-    mse = ModelingFFNNmlflow_example.run(nodes=nodes,
-                                         drop_rate=drop_rate,
-                                         learning_rate=learning_rate,
-                                         mlflow_run_name = MLFLOW_RUN_NAME,
-                                         epochs=EPOCHS)
+    mse = ModelingFFNN.run(nodes=nodes,
+                           drop_rate=drop_rate,
+                           learning_rate=learning_rate,
+                           mlflow_run_name = MLFLOW_RUN_NAME,
+                           epochs=EPOCHS)
     return mse
 
 
